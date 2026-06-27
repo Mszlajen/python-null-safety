@@ -117,3 +117,38 @@ class UndoNullableTestSuite(unittest.TestCase):
     def test_undo_of_inmutable_class_is_class(self):
         nullable_str = nullable(str)
         self.assertIs(undo_nullable(nullable_str), str)
+
+class SetterTestSuite(unittest.TestCase):
+    def test_set_attribute_in_class(self):
+        class Guerrero:
+            ...
+        NullableGuerrero = nullable(Guerrero)
+        NullableGuerrero.atacar = lambda *args: ...
+        self.assertTrue(hasattr(Guerrero, 'atacar'))
+    
+    def test_set_attribute_in_object(self):
+        class Guerrero:
+            def __init__(self, vida):
+                self.vida = vida
+        atila = Guerrero(100)
+        nullable_atila = nullable(atila)
+        nullable_atila.vida = 10
+        self.assertEqual(atila.vida, 10)
+    
+    def test_set_attribute_in_inmutable_object(self):
+        nullable_three = nullable(3)
+        with self.assertRaises(AttributeError):
+            try:
+                nullable_three.asdf = None
+            except AttributeError as e:
+                self.assertIn("'int'", e.args[0])
+                raise e
+    
+    def test_set_attribute_in_inmutable_class(self):
+        nullable_int = nullable(int)
+        with self.assertRaises(TypeError):
+            try:
+                nullable_int.asdf = None
+            except TypeError as e:
+                self.assertIn('asdf', e.args[0])
+                raise e

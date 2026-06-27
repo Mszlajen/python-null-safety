@@ -72,19 +72,22 @@ class NullableObject:
                 return partial(wrapped, attr)
             else:
                 return nullable(attr)
+    
+    def __setattr__(self, name: str, value: Any) -> None:
+        setattr(object.__getattribute__(self, 'obj'), name, value)
 
 def nullable_object(obj: object, value: Value):
     new_obj = object.__new__(type(f'nullable<{obj.__class__.__name__}>',
                                 (NullableObject,), 
                                 {attr: NullableSpecialMethod(value) for attr, value in getmembers_static(obj, ismethoddescriptor) if attr.startswith('__') and attr.endswith('__')} |
-                                {'__getattribute__': NullableObject.__getattribute__, 'obj': obj, 'value': value}))
+                                {'__setattr__': NullableObject.__setattr__, '__getattribute__': NullableObject.__getattribute__, 'obj': obj, 'value': value}))
     return new_obj
-    
+
 
 class NullableClass:
     def __init__(self, cls: type, value: Value = Value()):
-        self.cls = cls
-        self.value = value
+        object.__setattr__(self, 'cls', cls)
+        object.__setattr__(self, 'value', value)
 
     def __call__(self, *args, **kwargs):
         return nullable(self.cls(*args, **kwargs))
@@ -101,6 +104,8 @@ class NullableClass:
             else:
                 return nullable(attr)
     
+    def __setattr__(self, name: str, value: Any) -> None:
+        setattr(object.__getattribute__(self, 'cls'), name, value)
 
 class nullable:
     def __new__(cls, maybe_obj_or_class):
