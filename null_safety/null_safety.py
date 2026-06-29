@@ -9,6 +9,7 @@ class NonValue:
 nonValue = NonValue()
 
 class Value:
+    __slots__ = ('owner', )
     def __init__(self, owner=None):
         self.owner = owner
 
@@ -24,6 +25,8 @@ class Value:
             return super().__getattribute__(name)
 
 class NullType:
+    __slots__ = tuple()
+
     def __str__(self):
         return 'Null'
 
@@ -61,6 +64,8 @@ class NullableSpecialMethod:
             return self.base_descriptor
 
 class NullableObject:
+    __slots__ = ('obj', 'value')
+
     def __getattribute__(self, name: str) -> Any:
         if name == 'ifn':
             return object.__getattribute__(self, 'value')
@@ -85,6 +90,8 @@ def nullable_object(obj: object, value: Value):
 
 
 class NullableClass:
+    __slots__ = ('cls', 'value')
+
     def __init__(self, cls: type, value: Value = Value()):
         object.__setattr__(self, 'cls', cls)
         object.__setattr__(self, 'value', value)
