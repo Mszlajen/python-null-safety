@@ -1,6 +1,11 @@
-from functools import partial, wraps
+from functools import partial
 from inspect import getmembers_static, isfunction, ismethod, ismethoddescriptor
-from typing import Any
+from typing import Any, Callable
+
+def or_check(*functions: 'Callable[..., bool]') -> Callable[..., bool]:
+    return lambda *args: any(f(*args) for f in functions)
+
+is_function = or_check(isfunction, ismethod, ismethoddescriptor)
 
 class NonValue:
     def __getattribute__(self, name):
@@ -84,7 +89,7 @@ class NullableObject:
 def nullable_object(obj: object, value: Value):
     new_obj = object.__new__(type(f'nullable<{obj.__class__.__name__}>',
                                 (NullableObject,), 
-                                {attr: NullableSpecialMethod(value) for attr, value in getmembers_static(obj, ismethoddescriptor) if attr.startswith('__') and attr.endswith('__')} |
+                                {attr: NullableSpecialMethod(value) for attr, value in getmembers_static(obj, is_function) if attr.startswith('__') and attr.endswith('__')} |
                                 {'__setattr__': NullableObject.__setattr__, '__getattribute__': NullableObject.__getattribute__, 'obj': obj, 'value': value}))
     return new_obj
 

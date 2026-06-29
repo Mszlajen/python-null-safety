@@ -80,6 +80,27 @@ class nullableTestSuite(unittest.TestCase):
         nullable_int = nullable(int)
         self.assertTrue(hasattr(nullable_int(3), 'ifn'))
         self.assertEqual(nullable_int(3), 3)
+    
+    def test_user_defined_special_method_in_object(self):
+        class Guerrero:
+            __slots__ = ('vida',)
+            def __init__(self, vida):
+                self.vida = vida
+            
+            def __str__(self):
+                return f"#Guerrero({self.vida})"
+        self.assertEqual(str(nullable(Guerrero(100))), "#Guerrero(100)")
+    
+    def test_user_defined_special_method(self):
+        @nullable
+        class Guerrero:
+            __slots__ = ('vida',)
+            def __init__(self, vida):
+                self.vida = vida
+            
+            def __str__(self):
+                return f"#Guerrero({self.vida})"
+        self.assertEqual(str(Guerrero(100)), "#Guerrero(100)")
 
 class UndoNullableTestSuite(unittest.TestCase):
     def test_undo_none_is_none(self):
