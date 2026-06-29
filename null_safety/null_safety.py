@@ -1,6 +1,6 @@
 from functools import partial
 from inspect import getmembers_static, isfunction, ismethod, ismethoddescriptor
-from typing import Any, Callable
+from typing import Any, Callable, overload, TypeGuard
 
 def or_check(*functions: 'Callable[..., bool]') -> Callable[..., bool]:
     return lambda *args: any(f(*args) for f in functions)
@@ -120,7 +120,16 @@ class NullableClass:
         setattr(object.__getattribute__(self, 'cls'), name, value)
 
 class nullable:
-    def __new__(cls, maybe_obj_or_class):
+    @overload
+    def __new__(cls, maybe_obj_or_class: None | NullType) -> NullType: ...
+
+    @overload
+    def __new__[T](cls, maybe_obj_or_class: type[T]) -> 'type[T]': ...
+
+    @overload
+    def __new__[T](cls, maybe_obj_or_class: T) -> 'Nullable[T]': ...
+
+    def __new__[T](cls, maybe_obj_or_class: T) -> 'Nullable[T] | type[Nullable[T]]':
         if maybe_obj_or_class is None or maybe_obj_or_class is Null:
             return Null
         elif isinstance(maybe_obj_or_class, type):
@@ -138,6 +147,8 @@ class nullable:
                 return nullable_object(maybe_obj_or_class, value_obj)
             else:
                 return maybe_obj_or_class
+
+type Nullable[T] = T | NullType
 
 def undo_nullable(obj_or_class):
     if obj_or_class is None or obj_or_class is Null:
